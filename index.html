@@ -2,552 +2,746 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>LIMS 移动端</title>
     <style>
         :root {
-            --primary-color: #2E7D32; /* 农业绿 */
-            --accent-color: #4CAF50;
-            --bg-color: #f4f7f6;
-            --text-color: #333;
-            --card-bg: #ffffff;
+            /* iOS Color Palette */
+            --primary-color: #007AFF; /* System Blue */
+            --destructive-color: #FF3B30; /* System Red */
+            --success-color: #34C759; /* System Green */
+            --bg-color: #F2F2F7; /* System Grouped Background */
+            --card-bg: #FFFFFF;
+            --text-primary: #000000;
+            --text-secondary: #8A8A8E;
+            --separator-color: #C6C6C8;
+            --border-radius-lg: 12px;
+            --border-radius-sm: 8px;
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
             background-color: var(--bg-color);
             margin: 0;
             padding: 0;
-            color: var(--text-color);
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
+            color: var(--text-primary);
+            -webkit-font-smoothing: antialiased;
+            padding-bottom: 40px; /* Bottom safe area */
         }
 
-        /* 模态框 (公告) */
-        .modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.6);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-        .modal-content {
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            width: 80%;
-            text-align: center;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-        }
-        .btn-group {
-            margin-top: 20px;
-            display: flex;
-            justify-content: space-around;
-        }
-
-        /* 通用按钮 */
-        button {
-            border: none;
-            padding: 10px 20px;
-            border-radius: 6px;
-            font-size: 16px;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-        .btn-primary { background: var(--primary-color); color: white; }
-        .btn-secondary { background: #e0e0e0; color: #333; }
-        .btn-danger { background: #d32f2f; color: white; }
-        .btn-block { width: 100%; margin-bottom: 10px; }
-
-        /* 页面布局 */
-        .page {
-            display: none;
-            padding: 15px;
-            flex: 1;
-            overflow-y: auto;
-        }
-        .active { display: block; }
+        .hidden { display: none !important; }
         
+        /* 通用容器 */
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px 16px;
+        }
+
+        /* iOS 风格导航栏 */
         .header {
-            background: var(--primary-color);
-            color: white;
-            padding: 15px;
-            font-size: 18px;
-            font-weight: bold;
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--separator-color);
             display: flex;
             justify-content: space-between;
             align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            height: 44px;
+            box-sizing: border-box;
         }
-
-        /* 主页模块网格 */
-        .grid-menu {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            padding: 20px;
-        }
-        .menu-card {
-            background: var(--card-bg);
-            padding: 30px 10px;
-            border-radius: 12px;
+        .header h1 {
+            margin: 0;
+            font-size: 17px;
+            font-weight: 600;
             text-align: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            font-weight: bold;
+            position: absolute;
+            left: 0;
+            right: 0;
+            pointer-events: none;
+        }
+        .back-btn {
+            font-size: 17px;
             color: var(--primary-color);
             cursor: pointer;
-            border: 1px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+            z-index: 101;
         }
-        .menu-card:active { background: #f0f0f0; }
-
-        /* 表单样式 */
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: 500; font-size: 14px; }
-        input, select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            box-sizing: border-box;
-            font-size: 16px;
-        }
-        .result-box {
-            background: #e8f5e9;
-            padding: 15px;
-            border-radius: 6px;
-            margin-top: 15px;
-            white-space: pre-wrap;
-            border: 1px solid var(--accent-color);
+        /* CSS绘制返回箭头 */
+        .back-btn::before {
+            content: '';
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-top: 2px solid var(--primary-color);
+            border-left: 2px solid var(--primary-color);
+            transform: rotate(-45deg);
+            margin-right: 4px;
+            margin-top: 1px;
         }
 
-        /* 表格样式 (Module 1) */
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; font-size: 12px; }
-        th { background: #f5f5f5; }
-
-        /* 数据记录列表 (Module 3) */
-        .data-item {
-            background: white;
-            padding: 15px;
-            margin-bottom: 10px;
-            border-radius: 8px;
-            border-left: 4px solid var(--primary-color);
+        /* iOS 风格分组列表 (用于主页菜单) */
+        .ios-list-group {
+            background: var(--card-bg);
+            border-radius: var(--border-radius-lg);
+            overflow: hidden;
+            margin-bottom: 24px;
+        }
+        .ios-list-item {
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--card-bg);
             cursor: pointer;
+            position: relative;
+            font-size: 17px;
         }
-        .data-item small { color: #666; }
+        /* 列表项分割线 */
+        .ios-list-item:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 16px;
+            right: 0;
+            height: 1px;
+            background-color: var(--separator-color);
+            transform: scaleY(0.5); /* Retain hairline */
+        }
+        .ios-list-item:active { background-color: #E5E5EA; }
+        /* 列表右侧小箭头 */
+        .ios-arrow::after {
+            content: '';
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-top: 2px solid var(--separator-color);
+            border-right: 2px solid var(--separator-color);
+            transform: rotate(45deg);
+            margin-left: 10px;
+        }
+
+        /* iOS 风格表单区域 */
+        .ios-form-section {
+            background: var(--card-bg);
+            border-radius: var(--border-radius-lg);
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        .ios-input-group {
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            position: relative;
+        }
+        .ios-input-group:not(:last-child)::after {
+            content: '';
+            position: absolute; bottom: 0; left: 16px; right: 0;
+            height: 1px; background-color: var(--separator-color); transform: scaleY(0.5);
+        }
+        .ios-input-group label {
+            flex: 0 0 110px; /* 固定标签宽度 */
+            font-size: 16px;
+            color: var(--text-primary);
+        }
+        .ios-input-group .form-control {
+            flex: 1;
+            border: none;
+            font-size: 16px;
+            padding: 4px 0;
+            outline: none;
+            text-align: right; /* iOS 输入习惯 */
+            color: var(--primary-color);
+            background: transparent;
+        }
+        .ios-input-group textarea.form-control {
+            text-align: left;
+            resize: none;
+        }
+
+        /* 按钮样式 */
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 14px;
+            font-size: 17px;
+            font-weight: 600;
+            text-align: center;
+            border-radius: var(--border-radius-lg);
+            border: none;
+            cursor: pointer;
+            margin-bottom: 12px;
+            box-sizing: border-box;
+            transition: opacity 0.2s;
+        }
+        .btn:active { opacity: 0.7; }
+        .btn-primary { background-color: var(--primary-color); color: #fff; }
+        .btn-success { background-color: var(--success-color); color: #fff; }
+        .btn-secondary { background-color: #E5E5EA; color: var(--text-primary); }
+
+        /* 标题样式 */
+        h3.section-title {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin: 20px 0 8px 16px;
+            text-transform: uppercase;
+            font-weight: normal;
+        }
+
+        /* 表格样式 */
+        .result-table-container {
+            background: var(--card-bg);
+            border-radius: var(--border-radius-lg);
+            padding: 16px;
+            overflow-x: auto;
+        }
+        .result-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        .result-table th, .result-table td {
+            border-bottom: 1px solid var(--separator-color);
+            padding: 10px 8px;
+            text-align: center;
+        }
+        .result-table th {
+            color: var(--text-secondary);
+            font-weight: normal;
+            border-bottom-width: 2px;
+        }
+        .result-table tr:last-child td { border-bottom: none; }
+
+        /* 模态框 (iOS Alert 风格) */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.4);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(2px);
+        }
+        .modal-content {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 14px;
+            width: 80%;
+            max-width: 320px;
+            text-align: center;
+            overflow: hidden;
+        }
+        .modal-body { padding: 20px 16px; }
+        .modal-body h3 { margin: 0 0 10px 0; font-size: 18px; }
+        .modal-body p { margin: 0; font-size: 14px; color: var(--text-primary); }
+        .modal-footer {
+            display: flex;
+            border-top: 1px solid var(--separator-color);
+        }
+        .modal-btn {
+            flex: 1;
+            padding: 14px;
+            font-size: 17px;
+            color: var(--primary-color);
+            background: transparent;
+            border: none;
+            border-right: 1px solid var(--separator-color);
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .modal-btn:last-child { border-right: none; }
+        .modal-btn:active { background: #E5E5EA; }
+
+        /* 记录列表项 */
+        .record-item {
+            padding: 16px;
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--separator-color);
+        }
+        .record-title { font-weight: 600; margin-bottom: 4px;}
+        .record-date { font-size: 13px; color: var(--text-secondary); }
+        .tag { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 12px; background: var(--bg-color); color: var(--text-secondary); float: right;}
 
     </style>
 </head>
 <body>
 
-    <div id="disclaimer" class="modal">
+    <div id="startupModal" class="modal-overlay">
         <div class="modal-content">
-            <h3>公告</h3>
-            <p>本版本为测试版本，如有问题请联系WDP。</p>
-            <p>是否同意使用？</p>
-            <div class="btn-group">
-                <button class="btn-secondary" onclick="closeApp()">拒绝</button>
-                <button class="btn-primary" onclick="enterApp()">同意</button>
+            <div class="modal-body">
+                <h3>测试版本公告</h3>
+                <p>本版本为测试版本，如有问题请联系WDP。</p>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn" onclick="enterApp()">同意使用</button>
             </div>
         </div>
     </div>
 
-    <div id="page-home" class="page">
-        <div class="header">LIMS 移动端</div>
-        <div class="grid-menu">
-            <div class="menu-card" onclick="navTo('page-mod1')">1. 小区排列</div>
-            <div class="menu-card" onclick="navTo('page-mod2')">2. 计算用药量</div>
-            <div class="menu-card" onclick="navTo('page-mod3')">3. 数据记录</div>
-            <div class="menu-card" onclick="navTo('page-mod4')">4. 辅助工具</div>
-        </div>
-    </div>
+    <div id="appHeader" class="header hidden">
+        <div id="backBtn" class="back-btn hidden" onclick="goHome()">返回</div>
+        <h1 id="pageTitle">LIMS</h1>
+        <div style="width: 40px;"></div> </div>
 
-    <div id="page-mod1" class="page">
-        <div class="header"><span onclick="navTo('page-home')">← 返回</span> 小区排列</div>
-        <div class="form-group">
-            <label>处理数 (整数)</label>
-            <input type="number" id="m1-treatments" placeholder="例如: 5">
-        </div>
-        <div class="form-group">
-            <label>重复数 (整数)</label>
-            <input type="number" id="m1-reps" placeholder="例如: 3">
-        </div>
-        <div class="form-group">
-            <label>排列类型</label>
-            <div style="display:flex; gap:5px; flex-wrap:wrap;">
-                <button class="btn-secondary" onclick="generatePlot('RCBD')">随机区组</button>
-                <button class="btn-secondary" onclick="generatePlot('RCBD_COL')">区组(错列)</button>
-                <button class="btn-secondary" onclick="generatePlot('CRD')">完全随机</button>
-            </div>
-        </div>
-        <div id="m1-output"></div>
-    </div>
-
-    <div id="page-mod2" class="page">
-        <div class="header"><span onclick="navTo('page-home')">← 返回</span> 计算用药量</div>
+    <div id="mainContainer" class="container hidden">
         
-        <div style="background: #fff; padding: 10px; border-radius: 8px; margin-bottom: 20px;">
-            <h4>🧪 密度计算</h4>
-            <div style="display:flex; gap:10px; align-items:flex-end;">
-                <div style="flex:1;">
-                    <label>吸取 1ml 重量(g)</label>
-                    <input type="number" step="0.001" id="m2-density-weight">
+        <div id="moduleDashboard">
+            <h3 class="section-title">功能模块</h3>
+            <div class="ios-list-group">
+                <div class="ios-list-item ios-arrow" onclick="showModule(1)">小区排列</div>
+                <div class="ios-list-item ios-arrow" onclick="showModule(2)">计算用药量</div>
+                <div class="ios-list-item ios-arrow" onclick="showModule(3)">数据记录</div>
+                <div class="ios-list-item ios-arrow" onclick="showModule(4)">辅助工具</div>
+            </div>
+        </div>
+
+        <div id="module1" class="hidden">
+            <h3 class="section-title">参数设置</h3>
+            <div class="ios-form-section">
+                <div class="ios-input-group">
+                    <label>处理数</label>
+                    <input type="number" id="m1_treatment" class="form-control" placeholder="例如 5">
                 </div>
-                <button class="btn-primary" onclick="calcDensity()">计算</button>
+                <div class="ios-input-group">
+                    <label>重复数</label>
+                    <input type="number" id="m1_reps" class="form-control" placeholder="例如 4">
+                </div>
             </div>
-            <div id="m2-density-result" style="margin-top:5px; color:var(--primary-color); font-weight:bold;"></div>
-        </div>
+            
+            <h3 class="section-title">选择排列类型</h3>
+            <button class="btn btn-secondary" onclick="generatePlots('RCBD')">随机区组排列</button>
+            <button class="btn btn-secondary" onclick="generatePlots('RCBD_COL')">随机区组 (同列不重复)</button>
+            <button class="btn btn-secondary" onclick="generatePlots('CRD')">完全随机排列</button>
 
-        <div class="form-group">
-            <label>小区单位类型</label>
-            <select id="m2-unit-type" onchange="toggleUnitType()">
-                <option value="area">面积 (平方米)</option>
-                <option value="plant">株数 (株)</option>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label id="lbl-water">用水量 (升/公顷)</label>
-            <input type="number" id="m2-water" value="600">
-        </div>
-
-        <div class="form-group">
-            <label id="lbl-area">小区面积 (m²)</label>
-            <input type="number" id="m2-area-size">
-        </div>
-
-        <div class="form-group">
-            <label id="lbl-dosage">亩用药量 (g或ml / 亩)</label>
-            <input type="number" id="m2-dosage">
-        </div>
-
-        <div class="form-group">
-            <label>安全系数</label>
-            <input type="number" id="m2-safety" value="1.1" step="0.1">
-        </div>
-        
-        <div class="form-group">
-            <label>重复次数</label>
-            <input type="number" id="m2-reps" value="1">
-        </div>
-
-        <button class="btn-primary btn-block" onclick="calcDosage()">确定计算</button>
-        
-        <div id="m2-result" class="result-box" style="display:none;"></div>
-        <button id="btn-save-record" class="btn-secondary btn-block" style="display:none; margin-top:10px;" onclick="saveCurrentCalc()">保存到记录</button>
-    </div>
-
-    <div id="page-mod3" class="page">
-        <div class="header"><span onclick="navTo('page-home')">← 返回</span> 数据记录</div>
-        <p style="color:#666; font-size:14px;">点击行可查看详情。</p>
-        <div id="record-list">
+            <div id="m1_result_area" class="hidden" style="margin-top: 24px;">
+                <h3 class="section-title">排列示意图</h3>
+                <div class="result-table-container">
+                    <table class="result-table" id="plotTable">
+                        </table>
+                    <div style="margin-top:10px; font-size:12px; color:var(--text-secondary); text-align:center;">格式说明：处理编号-重复编号</div>
+                </div>
             </div>
-        <button class="btn-danger btn-block" onclick="clearRecords()" style="margin-top:20px;">清空记录</button>
-    </div>
-
-    <div id="page-mod4" class="page">
-        <div class="header"><span onclick="navTo('page-home')">← 返回</span> 农药单位换算助手</div>
-        
-        <div class="form-group">
-            <label>输入值</label>
-            <input type="number" id="m4-val">
-        </div>
-        
-        <div class="form-group">
-            <label>转换类型</label>
-            <select id="m4-type">
-                <option value="mu_to_m2">亩 → 平方米</option>
-                <option value="m2_to_mu">平方米 → 亩</option>
-                <option value="ha_to_mu">公顷 → 亩</option>
-                <option value="ppm_to_perc">PPM → 百分比(%)</option>
-            </select>
         </div>
 
-        <button class="btn-primary btn-block" onclick="runTool()">转换</button>
-        <div id="m4-result" class="result-box" style="display:none; text-align: center; font-size: 20px;"></div>
+        <div id="module2" class="hidden">
+            <h3 class="section-title">基本信息</h3>
+            <div class="ios-form-section">
+                <div class="ios-input-group">
+                    <label>记录编号</label>
+                    <input type="text" id="m2_record_id" class="form-control" placeholder="可选">
+                </div>
+                <div class="ios-input-group" style="padding:0;">
+                     <label style="margin-left:16px; padding: 12px 0;">计算模式</label>
+                    <select id="m2_unit_type" class="form-control" onchange="toggleUnitInputs()" style="margin-right:16px; direction: ltr;">
+                        <option value="m2">按面积 (平方米)</option>
+                        <option value="plant">按植株 (株数)</option>
+                    </select>
+                </div>
+            </div>
+
+            <h3 class="section-title">参数输入</h3>
+            <div class="ios-form-section">
+                <div class="ios-input-group">
+                    <label id="lbl_water">用水量(L/ha)</label>
+                    <input type="number" id="m2_water" class="form-control" value="600">
+                </div>
+                <div class="ios-input-group">
+                    <label id="lbl_area">小区面积(m²)</label>
+                    <input type="number" id="m2_area" class="form-control" placeholder="输入数值">
+                </div>
+                <div class="ios-input-group">
+                    <label>重复次数</label>
+                    <input type="number" id="m2_reps" class="form-control" value="3">
+                </div>
+                <div class="ios-input-group">
+                    <label>安全系数</label>
+                    <input type="number" id="m2_safety" class="form-control" value="1.1">
+                </div>
+                <div class="ios-input-group" style="flex-direction: column; align-items: flex-start;">
+                    <label id="lbl_dosage" style="margin-bottom: 8px; width: 100%;">亩用药量 (多个用空格分隔)</label>
+                    <textarea id="m2_dosage" class="form-control" rows="3" placeholder="例如: 10 20 50"></textarea>
+                </div>
+            </div>
+
+            <button class="btn btn-primary" onclick="calculateDosage()">开始计算</button>
+
+            <div id="m2_result_area" class="hidden" style="margin-top: 24px;">
+                <h3 class="section-title">计算结果</h3>
+                <div id="m2_results_container" class="result-table-container"></div>
+                <button class="btn btn-success" style="margin-top:16px;" onclick="saveRecord()">保存记录</button>
+            </div>
+        </div>
+
+        <div id="module3" class="hidden">
+            <div id="recordList" style="background: var(--card-bg); border-radius: var(--border-radius-lg); overflow: hidden;">
+                </div>
+        </div>
+
+        <div id="module4" class="hidden">
+            <h3 class="section-title">系统设置</h3>
+            <div class="ios-form-section">
+                <div class="ios-input-group" style="padding:0;">
+                    <label style="margin-left:16px; padding: 12px 0;">小数保留位数</label>
+                    <select id="setting_decimals" class="form-control" style="margin-right:16px; direction: ltr;">
+                        <option value="2">2位</option>
+                        <option value="3" selected>3位 (默认)</option>
+                        <option value="4">4位</option>
+                    </select>
+                </div>
+            </div>
+
+            <h3 class="section-title">密度/体积计算器</h3>
+            <p style="font-size:13px; color:var(--text-secondary); margin-left:16px; margin-bottom:8px;">步骤：先计算密度，再根据密度计算目标重量。</p>
+            
+            <div class="ios-form-section">
+                <div class="ios-input-group">
+                    <label>已知体积(ml)</label>
+                    <input type="number" id="tool_vol1" class="form-control">
+                </div>
+                <div class="ios-input-group">
+                    <label>称重重量(g)</label>
+                    <input type="number" id="tool_weight1" class="form-control">
+                </div>
+                <div style="padding: 12px 16px;">
+                    <button class="btn btn-secondary" style="margin-bottom: 0;" onclick="calcDensity()">计算密度</button>
+                     <div id="tool_density_res" style="margin-top:12px; font-weight:600; color:var(--primary-color); text-align: center;"></div>
+                </div>
+            </div>
+
+            <div class="ios-form-section">
+                <div class="ios-input-group">
+                    <label>目标体积(ml)</label>
+                    <input type="number" id="tool_vol2" class="form-control">
+                </div>
+                <div style="padding: 12px 16px;">
+                    <button class="btn btn-secondary" style="margin-bottom: 0;" onclick="calcTargetWeight()">计算目标重量</button>
+                     <div id="tool_weight_res" style="margin-top:12px; font-weight:600; color:var(--success-color); text-align: center;"></div>
+                </div>
+            </div>
+        </div>
+
     </div>
 
-    <script>
-        // --- 核心导航逻辑 ---
-        function enterApp() {
-            document.getElementById('disclaimer').style.display = 'none';
-            navTo('page-home');
-            loadRecords();
-        }
+    <div id="detailModal" class="modal-overlay hidden" onclick="closeDetailModal(event)">
+        <div class="modal-content" style="max-width:500px; width: 90%; text-align:left;">
+            <div class="modal-body" style="max-height: 60vh; overflow-y: auto;">
+                <h3 style="text-align: center;">记录详情</h3>
+                <div id="detailContent"></div>
+            </div>
+             <div class="modal-footer">
+                <button class="modal-btn" style="color: var(--text-primary); font-weight: normal;" onclick="document.getElementById('detailModal').classList.add('hidden')">关闭</button>
+            </div>
+        </div>
+    </div>
 
-        function closeApp() {
-            alert("请关闭浏览器窗口退出。");
-        }
+<script>
+    // --- 全局变量与配置 ---
+    let records = JSON.parse(localStorage.getItem('lims_records_v2')) || []; // 使用新key避免冲突
+    let densityValue = 0; 
 
-        function navTo(pageId) {
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.getElementById(pageId).classList.add('active');
-        }
+    // --- 初始化 ---
+    function enterApp() {
+        document.getElementById('startupModal').classList.add('hidden');
+        document.getElementById('appHeader').classList.remove('hidden');
+        document.getElementById('mainContainer').classList.remove('hidden');
+        goHome();
+    }
 
-        // --- 模块 1: 小区排列逻辑 ---
-        function generatePlot(type) {
-            const t = parseInt(document.getElementById('m1-treatments').value);
-            const r = parseInt(document.getElementById('m1-reps').value);
-            const output = document.getElementById('m1-output');
-            
-            if (!t || !r) { alert("请输入处理数和重复数"); return; }
+    // --- 导航逻辑 ---
+    function goHome() {
+        hideAllModules();
+        document.getElementById('moduleDashboard').classList.remove('hidden');
+        document.getElementById('backBtn').classList.add('hidden');
+        document.getElementById('pageTitle').innerText = "LIMS";
+    }
 
-            let html = `<h4>${type === 'RCBD' ? '随机区组' : type === 'RCBD_COL' ? '随机区组(错列)' : '完全随机'}示意图</h4><table>`;
-            
-            // 生成处理编号数组 [1, 2, ..., t]
-            let treatments = Array.from({length: t}, (_, i) => i + 1);
-            let grid = [];
-
-            if (type === 'CRD') {
-                // 完全随机：生成所有可能的小区 T*R 个
-                let allPlots = [];
-                for(let i=1; i<=t; i++) {
-                    for(let j=1; j<=r; j++) {
-                        allPlots.push(`${i}-${j}`); // 处理-重复
-                    }
-                }
-                // 打乱
-                allPlots.sort(() => Math.random() - 0.5);
-                
-                // 按行显示（这里假设还是按重复数的宽度来显示，方便查看，或者只是流式布局）
-                // 为了表格美观，我们按照每行 r 个或者 t 个来排，这里按 r 个一行显示
-                let cols = r; 
-                let rows = t; 
-                // CRD 不强制在同一行，这里只是为了视觉上的表格化
-                let count = 0;
-                for(let i=0; i<rows; i++) {
-                    html += "<tr>";
-                    for(let j=0; j<cols; j++) {
-                        html += `<td>${allPlots[count] || ''}</td>`;
-                        count++;
-                    }
-                    html += "</tr>";
-                }
-
-            } else {
-                // 随机区组 (RCBD)
-                // 每一行是一个重复 (Block)
-                // 第一行是 Rep 1，包含处理 1~t
-                
-                for(let i=1; i<=r; i++) { // 遍历重复（行）
-                    let rowTreatments = [...treatments];
-                    
-                    if (type === 'RCBD_COL' && grid.length > 0) {
-                        // 尝试错列：尽量让当前列的处理不与上一行同一列的处理相同
-                        // 这是一个简单的混洗尝试，不保证完美（完美错列是拉丁方逻辑，限制较多）
-                        let attempts = 0;
-                        let valid = false;
-                        while(!valid && attempts < 100) {
-                            rowTreatments.sort(() => Math.random() - 0.5);
-                            valid = true;
-                            // 检查每一列
-                            for(let c=0; c<t; c++) {
-                                let prevRow = grid[grid.length-1];
-                                if(prevRow[c] === rowTreatments[c]) {
-                                    valid = false;
-                                    break;
-                                }
-                            }
-                            attempts++;
-                        }
-                    } else {
-                        // 普通随机
-                        rowTreatments.sort(() => Math.random() - 0.5);
-                    }
-                    
-                    grid.push(rowTreatments);
-
-                    html += "<tr>";
-                    // 第一列显示重复编号，后面显示处理
-                    html += `<td style='background:#eee'><b>Rep ${i}</b></td>`;
-                    rowTreatments.forEach(trt => {
-                        html += `<td>${trt}-${i}</td>`; // 显示 处理-重复
-                    });
-                    html += "</tr>";
-                }
-            }
-
-            html += "</table>";
-            output.innerHTML = html;
-        }
-
-        // --- 模块 2: 计算用药量逻辑 ---
+    function showModule(moduleId) {
+        hideAllModules();
+        document.getElementById('backBtn').classList.remove('hidden');
         
-        // 密度计算
-        function calcDensity() {
-            const w = parseFloat(document.getElementById('m2-density-weight').value);
-            if(!w) return;
-            // 逻辑: 1ml 的重量是 w 克 -> 密度 = w g/ml
-            const density = w; 
-            document.getElementById('m2-density-result').innerText = `密度: ${density} g/ml`;
+        const modules = {
+            1: { id: 'module1', title: '小区排列' },
+            2: { id: 'module2', title: '计算用药量' },
+            3: { id: 'module3', title: '数据记录' },
+            4: { id: 'module4', title: '辅助工具' }
+        };
+
+        const target = modules[moduleId];
+        if (target) {
+            document.getElementById(target.id).classList.remove('hidden');
+            document.getElementById('pageTitle').innerText = target.title;
+            if (moduleId === 3) renderRecords();
+        }
+    }
+
+    function hideAllModules() {
+        document.getElementById('moduleDashboard').classList.add('hidden');
+        document.getElementById('module1').classList.add('hidden');
+        document.getElementById('module2').classList.add('hidden');
+        document.getElementById('module3').classList.add('hidden');
+        document.getElementById('module4').classList.add('hidden');
+    }
+
+    // --- 模块1：小区排列逻辑 (保持不变) ---
+    function shuffle(array) {
+        let currentIndex = array.length, randomIndex;
+        while (currentIndex != 0) {
+            randomIndex = Math.floor(Math.random() * currentIndex);
+            currentIndex--;
+            [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+        }
+        return array;
+    }
+
+    function generatePlots(type) {
+        const tCount = parseInt(document.getElementById('m1_treatment').value);
+        const rCount = parseInt(document.getElementById('m1_reps').value);
+
+        if (!tCount || !rCount || tCount < 1 || rCount < 1) {
+            alert("请输入有效的处理数和重复数");
+            return;
         }
 
-        function toggleUnitType() {
-            const type = document.getElementById('m2-unit-type').value;
-            if (type === 'area') {
-                document.getElementById('lbl-water').innerText = "用水量 (升/公顷)";
-                document.getElementById('lbl-area').innerText = "小区面积 (m²)";
-                document.getElementById('lbl-dosage').innerText = "亩用药量 (制剂/亩)";
-                document.getElementById('m2-dosage').placeholder = "g或ml";
+        const table = document.getElementById('plotTable');
+        table.innerHTML = "";
+        
+        let treatments = [];
+        for (let i = 1; i <= tCount; i++) treatments.push(i);
+
+        let html = "";
+
+        if (type === 'RCBD' || type === 'RCBD_COL') {
+            let baseArray = [...treatments];
+            for (let r = 1; r <= rCount; r++) {
+                let rowData = [];
+                if (type === 'RCBD') {
+                    rowData = shuffle([...treatments]);
+                } else {
+                    if (r === 1) shuffle(baseArray);
+                    rowData = [];
+                    for(let k=0; k<tCount; k++) {
+                         let idx = (k + r - 1) % tCount;
+                         rowData.push(baseArray[idx]);
+                    }
+                }
+                html += `<tr><td style="color:var(--text-secondary); font-size:12px;">Rep ${r}</td>`;
+                rowData.forEach(t => {
+                    html += `<td style="color:var(--primary-color); font-weight:600;">${t}-${r}</td>`;
+                });
+                html += `</tr>`;
+            }
+        } else if (type === 'CRD') {
+            let allPlots = [];
+            for (let r = 1; r <= rCount; r++) {
+                for (let t = 1; t <= tCount; t++) {
+                    allPlots.push(`${t}-${r}`);
+                }
+            }
+            shuffle(allPlots);
+            let idx = 0;
+            for (let r = 1; r <= rCount; r++) {
+                html += `<tr><td style="color:var(--text-secondary); font-size:12px;">Row ${r}</td>`;
+                for (let c = 0; c < tCount; c++) {
+                    if (idx < allPlots.length) {
+                        html += `<td style="color:var(--primary-color); font-weight:600;">${allPlots[idx]}</td>`;
+                        idx++;
+                    }
+                }
+                html += `</tr>`;
+            }
+        }
+
+        table.innerHTML = html;
+        document.getElementById('m1_result_area').classList.remove('hidden');
+    }
+
+    // --- 模块2：计算用药量逻辑 (更新文本) ---
+
+    function toggleUnitInputs() {
+        const unit = document.getElementById('m2_unit_type').value;
+        const lblWater = document.getElementById('lbl_water');
+        const lblArea = document.getElementById('lbl_area');
+        const lblDosage = document.getElementById('lbl_dosage');
+        const inputWater = document.getElementById('m2_water');
+
+        if (unit === 'm2') {
+            lblWater.innerText = "用水量(L/ha)";
+            inputWater.value = 600;
+            lblArea.innerText = "小区面积(m²)";
+            lblDosage.innerText = "亩用药量 (ml或g)";
+        } else {
+            lblWater.innerText = "用水量(L/株)";
+            inputWater.value = 0.2;
+            lblArea.innerText = "小区株数(株)";
+            lblDosage.innerText = "稀释倍数 (例如 1000)";
+        }
+    }
+
+    let lastCalculationResult = null;
+
+    function calculateDosage() {
+        const unit = document.getElementById('m2_unit_type').value;
+        const waterVal = parseFloat(document.getElementById('m2_water').value);
+        const areaVal = parseFloat(document.getElementById('m2_area').value);
+        const reps = parseInt(document.getElementById('m2_reps').value);
+        const safety = parseFloat(document.getElementById('m2_safety').value);
+        const dosageStr = document.getElementById('m2_dosage').value;
+        const decimals = parseInt(document.getElementById('setting_decimals').value);
+
+        if (!waterVal || !areaVal || !reps || !safety || !dosageStr) {
+            alert("请填写完整信息");
+            return;
+        }
+
+        const dosageArr = dosageStr.split(/[,\s]+/).filter(item => item.trim() !== '').map(Number);
+        
+        if (dosageArr.some(isNaN)) {
+            alert("用药量输入有误，请确保只包含数字");
+            return;
+        }
+
+        let resultHtml = `<table class="result-table"><thead><tr><th>输入值</th><th>小区药量</th><th>处理总量(含保险)</th></tr></thead><tbody>`;
+        let logData = [];
+
+        dosageArr.forEach(d => {
+            let plotChem = 0;
+            if (unit === 'm2') {
+                plotChem = (d / 666.667) * areaVal;
             } else {
-                document.getElementById('lbl-water').innerText = "每株用水量 (升/株)"; // 逻辑调整：株模式下通常输入单株用水
-                document.getElementById('lbl-area').innerText = "小区株数 (株)";
-                document.getElementById('lbl-dosage').innerText = "稀释倍数";
-                document.getElementById('m2-dosage').placeholder = "例如: 2000";
-            }
-        }
-
-        let currentCalcData = null; // 用于保存
-
-        function calcDosage() {
-            const type = document.getElementById('m2-unit-type').value;
-            const waterInput = parseFloat(document.getElementById('m2-water').value);
-            const areaOrCount = parseFloat(document.getElementById('m2-area-size').value);
-            const dosageOrDilution = parseFloat(document.getElementById('m2-dosage').value);
-            const safety = parseFloat(document.getElementById('m2-safety').value) || 1.1;
-            const reps = parseFloat(document.getElementById('m2-reps').value) || 1;
-
-            if(!waterInput || !areaOrCount || !dosageOrDilution) {
-                alert("请填写完整信息");
-                return;
+                let totalWaterPerPlot = waterVal * areaVal; // L
+                plotChem = (totalWaterPerPlot * 1000) / d; 
             }
 
-            let resultHTML = "";
-            let plotDrug = 0; // 每小区药量
-            let plotWater = 0; // 每小区水量
-
-            if (type === 'area') {
-                // 面积模式 (m²)
-                // 1. 每小区制剂用量 = (亩用药量 / 666.67) * 小区面积
-                const muToM2 = 666.667;
-                plotDrug = (dosageOrDilution / muToM2) * areaOrCount;
-                
-                // 2. 每小区用水量 (ml) = (公顷用水 L / 10000) * 小区面积 * 1000
-                plotWater = (waterInput / 10000) * areaOrCount * 1000;
-
-                resultHTML += `每小区理论用药: ${plotDrug.toFixed(3)} (g或ml)\n`;
-                resultHTML += `每小区理论用水: ${plotWater.toFixed(1)} ml\n`;
-
-            } else {
-                // 株数模式
-                // 1. 每小区用水量 (ml) = 单株用水(L) * 株数 * 1000
-                plotWater = waterInput * areaOrCount * 1000;
-                
-                // 2. 每小区用药量 = 总水 / 稀释倍数
-                plotDrug = plotWater / dosageOrDilution; // 此时单位是 g或ml
-
-                resultHTML += `每小区理论用水: ${plotWater.toFixed(1)} ml\n`;
-                resultHTML += `每小区理论用药: ${plotDrug.toFixed(3)} (g或ml)\n`;
-            }
-
-            // 计算处理总量（含安全系数和重复）
-            const totalDrug = plotDrug * reps * safety;
-            const totalWater = plotWater * reps * safety;
-
-            resultHTML += `------------------\n`;
-            resultHTML += `<b>最终处理称样量 (×${reps}重复, ×${safety}安全):</b>\n`;
-            resultHTML += `<b style='color:red; font-size:1.2em'>药剂: ${totalDrug.toFixed(3)} (g或ml)</b>\n`;
-            resultHTML += `兑水总量: ${totalWater.toFixed(1)} ml`;
-
-            const resDiv = document.getElementById('m2-result');
-            resDiv.innerHTML = resultHTML;
-            resDiv.style.display = 'block';
-            document.getElementById('btn-save-record').style.display = 'block';
-
-            // 缓存数据用于保存
-            currentCalcData = {
-                desc: type === 'area' ? `${areaOrCount}m²小区` : `${areaOrCount}株小区`,
-                result: `药:${totalDrug.toFixed(3)}, 水:${totalWater.toFixed(1)}`
-            };
-        }
-
-        // --- 模块 3: 数据记录逻辑 ---
-        function saveCurrentCalc() {
-            if(!currentCalcData) return;
-            const id = prompt("请输入编号或备注:", "Test-001");
-            if(id) {
-                const record = {
-                    id: id,
-                    time: new Date().toLocaleString(),
-                    data: currentCalcData
-                };
-                
-                let records = JSON.parse(localStorage.getItem('lims_records') || "[]");
-                records.unshift(record);
-                localStorage.setItem('lims_records', JSON.stringify(records));
-                alert("保存成功");
-                loadRecords(); // 刷新列表
-            }
-        }
-
-        function loadRecords() {
-            const list = document.getElementById('record-list');
-            let records = JSON.parse(localStorage.getItem('lims_records') || "[]");
+            let totalTreatChem = plotChem * reps * safety;
+            let plotChemStr = plotChem.toFixed(decimals);
+            let totalTreatStr = totalTreatChem.toFixed(decimals);
             
-            if(records.length === 0) {
-                list.innerHTML = "<div style='text-align:center;color:#999'>暂无记录</div>";
-                return;
-            }
+            let inputUnit = unit==='m2' ? 'ml(g)/亩' : '倍';
 
-            let html = "";
-            records.forEach(r => {
-                html += `
-                <div class="data-item" onclick="alert('详情:\\n${r.data.desc}\\n${r.data.result}')">
-                    <div style="font-weight:bold;">${r.id}</div>
-                    <div style="font-size:14px; margin:5px 0;">${r.data.result}</div>
-                    <small>${r.time}</small>
-                </div>`;
+            resultHtml += `<tr>
+                <td>${d}<br><span style="font-size:12px;color:var(--text-secondary)">${inputUnit}</span></td>
+                <td>${plotChemStr}</td>
+                <td style="font-weight:600; color:var(--primary-color)">${totalTreatStr}</td>
+            </tr>`;
+
+            logData.push({
+                input: d,
+                plotChem: plotChemStr,
+                total: totalTreatStr
             });
-            list.innerHTML = html;
+        });
+
+        resultHtml += `</tbody></table>`;
+        
+        resultHtml += `<div style="margin-top:12px; font-size:13px; color:var(--text-secondary); text-align:center;">
+            参数: 面积/株数 ${areaVal}, Reps ${reps}, 安全系数 ${safety}
+        </div>`;
+
+        document.getElementById('m2_results_container').innerHTML = resultHtml;
+        document.getElementById('m2_result_area').classList.remove('hidden');
+
+        lastCalculationResult = {
+            time: new Date().toLocaleString(),
+            id: document.getElementById('m2_record_id').value || '无编号',
+            unit: unit,
+            water: waterVal,
+            area: areaVal,
+            reps: reps,
+            safety: safety,
+            data: logData
+        };
+    }
+
+    function saveRecord() {
+        if (!lastCalculationResult) return;
+        lastCalculationResult.id = document.getElementById('m2_record_id').value || '无编号';
+        records.unshift(lastCalculationResult);
+        localStorage.setItem('lims_records_v2', JSON.stringify(records));
+        alert("保存成功");
+    }
+
+    // --- 模块3：数据记录逻辑 ---
+    function renderRecords() {
+        const list = document.getElementById('recordList');
+        if (records.length === 0) {
+            list.innerHTML = '<p style="text-align:center; color:var(--text-secondary); padding:30px;">暂无记录</p>';
+            return;
         }
 
-        function clearRecords() {
-            if(confirm("确定清空所有记录吗？")) {
-                localStorage.removeItem('lims_records');
-                loadRecords();
-            }
+        let html = '';
+        records.forEach((rec, index) => {
+            html += `<div class="record-item ios-arrow" onclick="viewRecord(${index})">
+                <div class="record-title">${rec.id} <span class="tag">${rec.data.length}组</span></div>
+                <div class="record-date">${rec.time}</div>
+            </div>`;
+        });
+        list.innerHTML = html;
+    }
+
+    function viewRecord(index) {
+        const rec = records[index];
+        const modal = document.getElementById('detailModal');
+        const content = document.getElementById('detailContent');
+        
+        let html = `<p style="margin-bottom:4px;"><strong>时间:</strong> ${rec.time}</p>
+                    <p style="margin-bottom:4px;"><strong>编号:</strong> ${rec.id}</p>
+                    <p style="margin-bottom:4px;"><strong>模式:</strong> ${rec.unit === 'm2' ? '面积模式' : '植株模式'}</p>
+                    <p style="margin-bottom:16px; color:var(--text-secondary); font-size:13px;">参数: 水量 ${rec.water}, 面积/株 ${rec.area}, Reps ${rec.reps}, 安全系数 ${rec.safety}</p>
+                    <table class="result-table">
+                        <tr><th>输入</th><th>小区量</th><th>总量</th></tr>`;
+        
+        rec.data.forEach(row => {
+            html += `<tr><td>${row.input}</td><td>${row.plotChem}</td><td style="color:var(--primary-color); font-weight:600;">${row.total}</td></tr>`;
+        });
+        html += `</table>`;
+
+        content.innerHTML = html;
+        modal.classList.remove('hidden');
+    }
+
+    function closeDetailModal(e) {
+        if (e.target.id === 'detailModal') {
+            document.getElementById('detailModal').classList.add('hidden');
+        }
+    }
+
+    // --- 模块4：工具逻辑 ---
+    function calcDensity() {
+        const vol = parseFloat(document.getElementById('tool_vol1').value);
+        const weight = parseFloat(document.getElementById('tool_weight1').value);
+        const resDiv = document.getElementById('tool_density_res');
+
+        if (!vol || !weight) {
+            resDiv.innerText = "请输入有效数值";
+            return;
         }
 
-        // --- 模块 4: 辅助工具 ---
-        function runTool() {
-            const val = parseFloat(document.getElementById('m4-val').value);
-            const type = document.getElementById('m4-type').value;
-            const resBox = document.getElementById('m4-result');
-            
-            if(isNaN(val)) return;
+        densityValue = weight / vol;
+        resDiv.innerText = `密度 = ${densityValue.toFixed(4)} g/ml`;
+    }
 
-            let res = 0;
-            let unit = "";
+    function calcTargetWeight() {
+        const vol = parseFloat(document.getElementById('tool_vol2').value);
+        const resDiv = document.getElementById('tool_weight_res');
 
-            switch(type) {
-                case 'mu_to_m2':
-                    res = val * 666.667;
-                    unit = "m²";
-                    break;
-                case 'm2_to_mu':
-                    res = val / 666.667;
-                    unit = "亩";
-                    break;
-                case 'ha_to_mu':
-                    res = val * 15;
-                    unit = "亩";
-                    break;
-                case 'ppm_to_perc':
-                    res = val / 10000;
-                    unit = "%";
-                    break;
-            }
-            
-            resBox.innerText = `${res.toFixed(4)} ${unit}`;
-            resBox.style.display = 'block';
+        if (!densityValue) {
+            resDiv.innerText = "请先计算密度";
+            return;
+        }
+        if (!vol) {
+            resDiv.innerText = "请输入目标体积";
+            return;
         }
 
-    </script>
+        const weight = vol * densityValue;
+        resDiv.innerText = `所需重量 = ${weight.toFixed(3)} g`;
+    }
+
+</script>
 </body>
 </html>
 
